@@ -1,2 +1,2 @@
 # RestoZen_backend
-A System to manage morden restaurant
+A System to manage morden restaurant backend.
