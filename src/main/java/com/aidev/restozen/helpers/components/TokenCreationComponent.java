@@ -19,19 +19,16 @@ public class TokenCreationComponent {
 
     public String generateToken(Collection<? extends GrantedAuthority> authorities, String name) {
         Instant now = Instant.now();
-        long expiry = 3600L;
-        // @formatter:off
-        String scope = authorities.stream()
+        String roles = authorities.stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("self")
                 .issuedAt(now)
-                .expiresAt(now.plusSeconds(expiry))
+                .expiresAt(now.plusSeconds(60 * 60))
                 .subject(name)
-                .claim("roles", scope)
+                .claim("roles", roles)
                 .build();
-        // @formatter:on
         return encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 }
