@@ -12,16 +12,20 @@ import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthen
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.io.File;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
-public class WebConfig {
+public class WebConfig implements WebMvcConfigurer {
 
     private static AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry authorizeRequests(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry authorize) {
         return authorize
                 .requestMatchers(HttpMethod.POST, "/users/customers").permitAll()
+                .requestMatchers(HttpMethod.GET, "/resources/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/h2-console/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/h2-console/**").permitAll()
                 .anyRequest().authenticated();
@@ -59,4 +63,11 @@ public class WebConfig {
         };
     }
 
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        String applicationPath = new File(".").getAbsolutePath();
+        String publicLocation = "file:///" + applicationPath + "/public/";
+        registry.addResourceHandler("/resources/**")
+                .addResourceLocations(publicLocation, "classpath:/static/");
+    }
 }
