@@ -24,15 +24,19 @@ public class TokenCreationComponent {
                 .stream()
                 .map(UserType::getName)
                 .collect(Collectors.joining(","));
-        JwtClaimsSet claims = JwtClaimsSet.builder()
+        JwtClaimsSet.Builder builder = JwtClaimsSet.builder()
                 .issuer("self")
                 .issuedAt(now)
                 .expiresAt(now.plusSeconds(60 * 60))
                 .subject(user.getUsername())
                 .claim("roles", roles)
-                .claim("name", user.getName())
-                .claim("imageLocation", user.getImageLocation())
-                .build();
+                .claim("name", user.getName());
+
+        if (user.getImageLocation() != null) {
+            builder.claim("imageLocation", user.getImageLocation());
+        }
+
+        JwtClaimsSet claims = builder.build();
         return encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 }

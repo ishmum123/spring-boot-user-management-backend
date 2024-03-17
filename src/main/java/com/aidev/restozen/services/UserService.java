@@ -57,6 +57,9 @@ public class UserService implements UserDetailsService {
 
     // TODO: Move all file related operations in a component
     private static String moveFileToPublicDirectory(String fileId) {
+        if (fileId == null) {
+            return null;
+        }
         File tmpFile = new FileSystemResource("tmp/" + fileId).getFile();
         if (!tmpFile.exists()) {
             throw new RuntimeException("Invalid File Name Provided");

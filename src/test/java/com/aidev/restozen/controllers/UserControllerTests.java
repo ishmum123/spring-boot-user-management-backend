@@ -3,6 +3,7 @@ package com.aidev.restozen.controllers;
 import com.aidev.restozen.database.repositories.UserRepository;
 import com.aidev.restozen.helpers.components.UserCreationComponent;
 import com.aidev.restozen.helpers.dtos.CredentialCreationDTO;
+import com.aidev.restozen.helpers.dtos.CustomerCreationDTO;
 import com.aidev.restozen.helpers.dtos.EmployeeCreationDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -58,7 +59,7 @@ public class UserControllerTests {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].username").value("admin"))
-                .andExpect(jsonPath("$[0].type.name").value("ADMIN"));
+                .andExpect(jsonPath("$[0].types[0].name").value("ADMIN"));
     }
 
     @Test
@@ -75,7 +76,8 @@ public class UserControllerTests {
     @Test
     @Transactional
     public void registerCustomerWhenValidDataThenReturnsNewCustomerToken() throws Exception {
-        String json = transformToJson(new CredentialCreationDTO("customer", "secret"));
+        CustomerCreationDTO dto = new CustomerCreationDTO("Carl", "customer", "secret", null);
+        String json = transformToJson(dto);
         mvc
                 .perform(post("/users/customers").content(json).contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
@@ -89,10 +91,12 @@ public class UserControllerTests {
         userCreationComponent.createEmployee(dto, null);
         long lastCredentialCount = userRepository.count();
 
-        String json = transformToJson(new CredentialCreationDTO("employee2", "secret"));
+        EmployeeCreationDTO employeeCreationDTO = new EmployeeCreationDTO("Emily", "employee2", "secret", Set.of("SALES"), "image.jpg");
+
+        String json = transformToJson(employeeCreationDTO);
         mvc
                 .perform(
-                        addToken(post("/users/employees"), "employee", "secret")
+                        addToken(post("/users/employees"), "salesman", "secret")
                                 .content(json)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
@@ -125,16 +129,17 @@ public class UserControllerTests {
     }
 
     private void createEmployee(String username) throws Exception {
+        EmployeeCreationDTO dto = new EmployeeCreationDTO(username, username, "secret", Set.of("SALES"), null);
         mvc
                 .perform(
                         addToken(post("/users/employees"), "admin", "password")
-                                .content(transformToJson(new CredentialCreationDTO(username, "secret")))
+                                .content(transformToJson(dto))
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.username").value(username))
-                .andExpect(jsonPath("$.type.name").value("EMPLOYEE"));
+                .andExpect(jsonPath("$.types[0].name").value("SALES"));
     }
 
     private MockHttpServletRequestBuilder addToken(MockHttpServletRequestBuilder builder, String username, String password) throws Exception {
