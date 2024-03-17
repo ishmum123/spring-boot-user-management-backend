@@ -1,33 +1,35 @@
 package com.aidev.restozen.helpers.components;
 
 
-import com.aidev.restozen.database.entities.Credential;
+import com.aidev.restozen.database.entities.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 
-import static java.util.Collections.singletonList;
-
 @Component
 public class ConverterComponent {
-    public static UserDetails convert(Credential credential) {
+    public static UserDetails convert(User user) {
         return new UserDetails() {
 
             @Override
             public Collection<? extends GrantedAuthority> getAuthorities() {
-                return singletonList(() -> credential.getType().getName());
+                return user
+                        .getTypes()
+                        .stream()
+                        .map(type -> (GrantedAuthority) type::getName)
+                        .toList();
             }
 
             @Override
             public String getPassword() {
-                return credential.getPassword();
+                return user.getPassword();
             }
 
             @Override
             public String getUsername() {
-                return credential.getUsername();
+                return user.getUsername();
             }
 
             @Override

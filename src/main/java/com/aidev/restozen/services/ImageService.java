@@ -33,14 +33,14 @@ public class ImageService {
     }
 
     public IdHolderDTO uploadImage(ImageDTO dto) {
-        String id = createIdFromEpoch();
         String imageData = dto.image();
 
         try {
             String fileType = imageData.split(IMAGE_PREFIX)[1].split(DATA_SEPARATOR)[0];
             byte[] bytes = Base64.getDecoder().decode(imageData.split(DATA_SEPARATOR)[1]);
+            String id = createIdFromEpoch() + "." + fileType;
             String directoryPath = new FileSystemResource("tmp").getFile().getAbsolutePath();
-            Path path = Paths.get(directoryPath, id + "." + fileType);
+            Path path = Paths.get(directoryPath, id);
             Files.write(path, bytes);
             return new IdHolderDTO(id);
         } catch (IOException e) {

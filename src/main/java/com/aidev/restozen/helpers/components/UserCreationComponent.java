@@ -1,32 +1,58 @@
 package com.aidev.restozen.helpers.components;
 
-import com.aidev.restozen.database.entities.Credential;
-import com.aidev.restozen.database.repositories.CredentialRepository;
+import com.aidev.restozen.database.entities.User;
+import com.aidev.restozen.database.entities.UserType;
+import com.aidev.restozen.database.repositories.UserRepository;
 import com.aidev.restozen.database.repositories.UserTypeRepository;
-import com.aidev.restozen.helpers.dtos.CredentialCreationDTO;
+import com.aidev.restozen.helpers.dtos.CustomerCreationDTO;
+import com.aidev.restozen.helpers.dtos.EmployeeCreationDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
 public class UserCreationComponent {
 
-    private final CredentialRepository credentialRepository;
+    private final UserRepository userRepository;
     private final UserTypeRepository userTypeRepository;
 
     private final PasswordEncoder encoder;
 
-    public Credential createUser(CredentialCreationDTO dto, String userType) {
+    public User createEmployee(EmployeeCreationDTO dto, String imageLocation) {
+        Set<String> roles = dto.roles();
+
+        Set<UserType> userTypes = userTypeRepository.findByNameIn(roles);
+
+        if (userTypes.size() < roles.size())
+            throw new IllegalArgumentException("One or more UserType-s do not exist");
+
+        User user = User.builder()
+                .name(dto.name())
+                .username(dto.username())
+                .password(encoder.encode(dto.password()))
+                .imageLocation(imageLocation)
+                .types(userTypes)
+                .build();
+
+        return userRepository.saveAndFlush(user);
+    }
+
+    public User createCustomer(CustomerCreationDTO dto, String imageLocation) {
+        //noinspection OptionalGetWithoutIsPresent
         return userTypeRepository
-                .findByName(userType)
-                .map(type -> Credential
+                .findByName("CUSTOMER")
+                .map(type -> User
                         .builder()
+                        .name(dto.name())
                         .username(dto.username())
                         .password(encoder.encode(dto.password()))
-                        .type(type)
+                        .imageLocation(imageLocation)
+                        .types(Set.of(type))
                         .build())
-                .map(credentialRepository::saveAndFlush)
-                .orElseThrow(() -> new IllegalArgumentException("User Type '" + userType + "' does not exist"));
+                .map(userRepository::saveAndFlush)
+                .get();
     }
 }

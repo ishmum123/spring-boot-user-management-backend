@@ -3,16 +3,21 @@ package com.aidev.restozen.database.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Entity
+import java.util.Set;
+
+@Entity(name = "`user`")
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Credential {
+public class User {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private String id;
+
+	@Column(nullable = false)
+	private String name;
 
 	@Column(nullable = false)
 	private String username;
@@ -20,7 +25,10 @@ public class Credential {
 	@Column(nullable = false)
 	private String password;
 
-	@ManyToOne(optional = false, cascade = CascadeType.REMOVE)
-	private UserType type;
+	@Column
+	private String imageLocation;
+
+	@ManyToMany(fetch = FetchType.EAGER)
+	private Set<UserType> types;
 
 }

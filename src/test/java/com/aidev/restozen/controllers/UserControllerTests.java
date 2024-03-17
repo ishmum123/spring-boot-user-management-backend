@@ -1,8 +1,9 @@
 package com.aidev.restozen.controllers;
 
-import com.aidev.restozen.database.repositories.CredentialRepository;
+import com.aidev.restozen.database.repositories.UserRepository;
 import com.aidev.restozen.helpers.components.UserCreationComponent;
 import com.aidev.restozen.helpers.dtos.CredentialCreationDTO;
+import com.aidev.restozen.helpers.dtos.EmployeeCreationDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
@@ -13,6 +14,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+
+import java.util.Set;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,7 +36,7 @@ public class UserControllerTests {
     private UserCreationComponent userCreationComponent;
 
     @Autowired
-    private CredentialRepository credentialRepository;
+    private UserRepository userRepository;
 
     private static String transformToJson(Object o) throws JsonProcessingException {
         return new ObjectMapper().writer().withDefaultPrettyPrinter().writeValueAsString(o);
@@ -82,8 +85,9 @@ public class UserControllerTests {
 
     @Test
     public void createEmployeeWhenEmployeeRequestsThenResponseIsForbidden() throws Exception {
-        userCreationComponent.createUser(new CredentialCreationDTO("employee", "secret"), "EMPLOYEE");
-        long lastCredentialCount = credentialRepository.count();
+        EmployeeCreationDTO dto = new EmployeeCreationDTO("sam", "salesman", "secret", Set.of("SALES"), null);
+        userCreationComponent.createEmployee(dto, null);
+        long lastCredentialCount = userRepository.count();
 
         String json = transformToJson(new CredentialCreationDTO("employee2", "secret"));
         mvc
@@ -96,27 +100,27 @@ public class UserControllerTests {
                 .andExpect(status().isForbidden())
                 .andExpect(content().string(emptyOrNullString()));
 
-        long currentCredentialCount = credentialRepository.count();
+        long currentCredentialCount = userRepository.count();
         assertEquals(lastCredentialCount, currentCredentialCount, "Number of employees should remain same");
     }
 
     @Test
     @Transactional
     public void createEmployeeWhenAdminRequestsThenNewEmployeeIsReturned() throws Exception {
-        long lastCredentialCount = credentialRepository.count();
+        long lastCredentialCount = userRepository.count();
         createEmployee("employee");
-        long currentCredentialCount = credentialRepository.count();
+        long currentCredentialCount = userRepository.count();
         assertEquals(lastCredentialCount + 1, currentCredentialCount, "Number of employees should increment by 1");
     }
 
     @Test
     @Transactional
     public void createEmployeeWhenAdminRequestsMultipleEmployeeCreationThenSuccess() throws Exception {
-        long lastCredentialCount = credentialRepository.count();
+        long lastCredentialCount = userRepository.count();
         createEmployee("employee1");
         createEmployee("employee2");
         createEmployee("employee3");
-        long currentCredentialCount = credentialRepository.count();
+        long currentCredentialCount = userRepository.count();
         assertEquals(lastCredentialCount + 3, currentCredentialCount, "Number of employees should increment by 3");
     }
 
